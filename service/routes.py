@@ -109,6 +109,16 @@ def create_products():
 #
 # PLACE YOUR CODE HERE TO READ A PRODUCT
 #
+@app.route("/products/<int:product_id>", methods=["GET"])
+def read_a_product(product_id):
+    app.logger.info("Request to retrieve product...")
+    test_id = product_id
+    product = Product.find(test_id)
+    if not product:
+        abort(status.HTTP_404_NOT_FOUND, f"Product with id: {product_id} not found")
+    product = product.serialize()
+    app.logger.info("Product with id: {product_id} retrieved")
+    return product, status.HTTP_200_OK
 
 ######################################################################
 # U P D A T E   A   P R O D U C T
@@ -117,6 +127,19 @@ def create_products():
 #
 # PLACE YOUR CODE TO UPDATE A PRODUCT HERE
 #
+@app.route("/products/<int:product_id>", methods=["PUT"])
+def update_a_product(product_id):
+    app.logger.info("Request to update a product...")
+    test_id = product_id
+    product = Product.find(test_id)
+    if not product:
+        abort(status.HTTP_NOT_FOUND, f"Product with id:{test_id} not found")
+    data = request.get_json()
+    product.deserialize(data)
+    product.update()
+    product = product.serialize()
+    return jsonify(product), status.HTTP_200_OK
+
 
 ######################################################################
 # D E L E T E   A   P R O D U C T

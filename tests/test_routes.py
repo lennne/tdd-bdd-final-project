@@ -166,6 +166,29 @@ class TestProductRoutes(TestCase):
     #
     # ADD YOUR TEST CASES HERE
     #
+    def test_read_a_product(self):
+        """Read a product"""
+        test_product = self._create_products(1)[0]
+        print(test_product.name)
+        response = self.client.get(f"{BASE_URL}/{test_product.id}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(data["id"], test_product.id)
+
+    def test_update_a_product(self):
+        """Update a product"""
+        test_product = ProductFactory()
+        response = self.client.post(BASE_URL, json=test_product.serialize())
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        test_product.name = "john"
+        data = response.get_json()
+        my_id = data["id"]
+        print(test_product.name)
+        response = self.client.put(f"{BASE_URL}/{my_id}", json=test_product.serialize())
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(test_product.name, "john")
+
+
 
     ######################################################################
     # Utility functions
