@@ -27,7 +27,7 @@ import os
 import logging
 import unittest
 from decimal import Decimal
-from service.models import Product, Category, db
+from service.models import Product, Category, db, DataValidationError
 from service import app
 from tests.factories import ProductFactory
 
@@ -160,7 +160,85 @@ class TestProductModel(unittest.TestCase):
             product = ProductFactory()
             product.create()
         name = Product.all()[0].name
-        count = [product for product in Product.all() if product.name == name]
+        count = len([product for product in Product.all() if product.name == name])
         found = Product.find_by_name(name)
         self.assertEqual(count, found.count())
-            
+    
+    def test_find_a_product_by_category(self):
+        """It should find a product by category"""
+        products = Product.all()
+        self.assertEqual(products, [])
+        for _ in range(10):
+            product = ProductFactory()
+            product.create()
+        productWithCategory = Product.all()[0].category
+        count = len([product for product in Product.all() if product.category == productWithCategory])
+        foundProducts = Product.find_by_category(productWithCategory)
+        self.assertEqual(foundProducts.count(), count)
+        for product in foundProducts:
+            self.assertEqual(product.category, productWithCategory)
+
+    def test_find_product_by_availability(self):
+        """It should find a product by availability"""
+        products = Product.all()
+        self.assertEqual(products, [])
+        for _ in range(10):
+            product = ProductFactory()
+            product.create()
+        available = Product.all()[0].available
+        count = len([product for product in Product.all() if product.available == available])
+        foundAvailability = Product.find_by_availability(available)
+        self.assertEqual(foundAvailability.count(), count)
+        for product in foundAvailability:
+            self.assertEqual(product.available, available)
+    
+    def test_id_does_not_exist_in_product(self):
+        """It should throw an error that id does not exist when updating id"""
+        product = ProductFactory()
+        product.create()
+        self.assertIsNotNone(product.id)
+        product.id = None
+        print(self.assertRaises(DataValidationError, product.update))
+
+    def test_available_does_not_exist_in_dict(self):
+        """It should throw an error that id does not exist when assigning from a dict"""
+        product = ProductFactory()
+        product.create()
+        self.assertIsNotNone(product.id)
+        product.available = None
+        productDict = product.serialize()
+        with self.assertRaises(DataValidationError):
+            product.deserialize(productDict)
+
+    def test_attribute_does_not_exist_in_dict(self):
+        """It should throw an error that attribute does not exist when assigning from a dict"""
+        product = ProductFactory()
+        product.create()
+        self.assertIsNotNone(product.id)
+        productDict = product.serialize()
+        productDict['category'] = "NOT_AN_ACTUAL_CATEGORY"
+        with self.assertRaises(DataValidationError) as context:
+            product.deserialize(productDict)
+
+    def test_type_does_not_belong_to_the_attribute(self):
+        """It should throw an error that type does not belong when assigning to an attribute"""
+        product = ProductFactory()
+        product.create()
+        self.assertIsNotNone(product.id)
+        productDict = product.serialize()
+        productDict["price"] = None
+        with self.assertRaises(DataValidationError) as context:
+            product.deserialize(productDict)
+
+    def test_find_a_product_by_price(self):
+        """It should find a product by its price"""
+        for _ in range(10):
+            product = ProductFactory()
+            product.create()
+        self.assertIsNotNone(product.id)
+        productPrice = Product.all()[0].price
+        count = len([product for product in Product.all() if product.price == productPrice])
+        lengthOfProductsWithPrice = Product.find_by_price(productPrice)
+        self.assertEqual(count, lengthOfProductsWithPrice.count())
+        for product in lengthOfProductsWithPrice:
+            self.assertEqual(product.price, productPrice)
