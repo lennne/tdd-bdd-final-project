@@ -149,3 +149,14 @@ def update_a_product(product_id):
 #
 # PLACE YOUR CODE TO DELETE A PRODUCT HERE
 #
+@app.route('/products/<int:product_id>', methods=["DELETE"])
+def delete_a_product(product_id):
+    app.logger.info("Request to delete a product")
+    test_id = product_id
+    product = Product.find(test_id)
+    if not product:
+        abort(status.HTTP_NOT_FOUND, f"Product with id: {test_id} not found")
+
+    product.delete()
+    product = product.serialize()
+    return jsonify(product), status.HTTP_204_NO_CONTENT
