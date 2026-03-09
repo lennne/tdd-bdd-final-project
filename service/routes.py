@@ -101,6 +101,17 @@ def create_products():
 #
 # PLACE YOUR CODE TO LIST ALL PRODUCTS HERE
 #
+@app.route('/products', methods=["GET"])
+def list_all_products():
+    app.logger.info("Request to retrieve all products...")
+    products = Product.all()
+    if len(products) < 0:
+        abort(status.HTTP_404_NOT_FOUND, f"Products not found")
+
+    products = [product.serialize() for product in products]
+    return jsonify(products), status.HTTP_200_OK
+
+
 
 ######################################################################
 # R E A D   A   P R O D U C T
